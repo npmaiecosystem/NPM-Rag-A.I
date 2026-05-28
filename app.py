@@ -28,7 +28,7 @@ def ask():
   data["query"] = request.form.get("query")
   data["DB_PATH"] = request.form.get("DB_PATH")
   data["temperature"] = 0.5
-  data["model"] = "llama3.2"
+  data["model"] = "llama3.2:3b"
 
   filess= request.files.getlist('file')
   files=[]
