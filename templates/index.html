@@ -1,185 +1,1502 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>NPM Rag A.I</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='NPMaistyle.css')}}" />
-  </head>
-  <body>
-    <header class="header">NPM Rag A.I</header>
+<head>
+  <title>NPMAI — RAG Intelligence Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════
+   ROOT & CUSTOM PROPERTIES
+═══════════════════════════════════════════ */
+:root {
+  --void: #03020a;
+  --deep: #06040f;
+  --abyss: #0a0818;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.1);
+  --glass-border-hover: rgba(149,120,255,0.4);
+  
+  --ion: #9578ff;
+  --ion-bright: #b8a0ff;
+  --plasma: #7c6bf2;
+  --aurora: #38d9d9;
+  --nova: #3dd68c;
+  --flare: #f5a623;
+  --pulsar: #ff6b9d;
+  
+  --text-prime: #f2f0ff;
+  --text-second: rgba(242,240,255,0.55);
+  --text-ghost: rgba(242,240,255,0.28);
+  
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  --r: 12px;
+  --r2: 18px;
+  --r3: 24px;
+}
 
-    <video autoplay muted loop id="background-video">
-      <source src="https://npmexplorer.netlify.app/NPM%20ai%20backgrond%20video.mp4" />
-    </video>
-    <div id="video-overlay"></div>
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-    <main class="container">
-      <div class="card" style="margin-bottom: 20px">
-        <button onclick="product('Chat')">Chat</button>
-        <button onclick="product('use')">Use Your ORG RAG Chat</button>
-        <button onclick="product('develop')">Develop Rag Chat</button>
+body {
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--text-prime);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+a { color: var(--ion-bright); text-decoration: none; transition: color .2s; }
+a:hover { color: #fff; }
+code, pre { font-family: var(--font-mono); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--plasma); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════
+   PARTICLE CANVAS
+═══════════════════════════════════════════ */
+#particle-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════════
+   GLOBAL NOISE OVERLAY
+═══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════════ */
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 2; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR — GLASSMORPHISM
+═══════════════════════════════════════════ */
+.sidebar {
+  width: 248px;
+  min-width: 248px;
+  background: rgba(9,7,20,0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: transform .3s var(--ease-out-expo);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ion), transparent);
+}
+
+.sidebar-logo {
+  padding: 28px 22px 22px;
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+}
+
+.logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 6px;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+  filter: drop-shadow(0 0 12px rgba(149,120,255,0.6)) brightness(1.1);
+  transition: all .3s var(--ease-spring);
+}
+.logo-image:hover {
+  filter: drop-shadow(0 0 20px rgba(149,120,255,0.9)) brightness(1.3);
+  transform: scale(1.05);
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--text-ghost);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-top: 10px;
+  padding-left: 2px;
+}
+
+.sidebar-nav { flex: 1; padding: 14px 0; }
+
+.nav-section { padding: 18px 22px 6px; }
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text-ghost);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-second);
+  cursor: pointer;
+  transition: all .2s;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  position: relative;
+}
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(149,120,255,0.12), transparent);
+  transition: width .2s;
+}
+.nav-item:hover {
+  color: var(--text-prime);
+  border-left-color: rgba(149,120,255,0.4);
+  text-decoration: none;
+}
+.nav-item:hover::after { width: 100%; }
+.nav-item.active {
+  color: var(--ion-bright);
+  border-left-color: var(--ion);
+  background: linear-gradient(90deg, rgba(149,120,255,0.1), transparent);
+  font-weight: 500;
+}
+
+.nav-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--ion), var(--aurora));
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: .04em;
+}
+
+.sidebar-footer {
+  padding: 18px 22px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.pypi-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(61,214,140,0.06);
+  border: 1px solid rgba(61,214,140,0.18);
+  border-radius: 10px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.pypi-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(61,214,140,0.05), transparent);
+}
+.pypi-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--nova);
+  box-shadow: 0 0 8px var(--nova);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 4px var(--nova), 0 0 8px var(--nova); opacity: 1; }
+  50% { box-shadow: 0 0 12px var(--nova), 0 0 20px rgba(61,214,140,0.4); opacity: 0.7; }
+}
+
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+.main { flex: 1; min-width: 0; }
+.page { display: none; }
+.page.active { display: block; animation: page-in .5s var(--ease-out-expo); }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   HERO — FULL 3D IMMERSIVE
+═══════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0px 72px 72px;
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+/* Animated gradient mesh background */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: orb-drift 12s ease-in-out infinite;
+}
+.hero-orb-1 {
+  width: 600px; height: 600px;
+  top: -200px; left: -100px;
+  background: radial-gradient(circle, rgba(124,107,242,0.18) 0%, transparent 70%);
+  animation-duration: 14s;
+}
+.hero-orb-2 {
+  width: 500px; height: 500px;
+  top: 50%; right: -150px;
+  background: radial-gradient(circle, rgba(56,217,217,0.1) 0%, transparent 70%);
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+.hero-orb-3 {
+  width: 400px; height: 400px;
+  bottom: -100px; left: 30%;
+  background: radial-gradient(circle, rgba(149,120,255,0.12) 0%, transparent 70%);
+  animation-duration: 20s;
+  animation-delay: -10s;
+}
+@keyframes orb-drift {
+  0%,100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Grid lines background */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(149,120,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(149,120,255,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  animation: grid-move 20s linear infinite;
+}
+@keyframes grid-move {
+  from { background-position: 0 0; }
+  to   { background-position: 60px 60px; }
+}
+
+.hero > * { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ion);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .1s forwards;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 32px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ion));
+}
+.hero-eyebrow::after {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--ion);
+  box-shadow: 0 0 8px var(--ion);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--text-prime);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .2s forwards;
+}
+.hero-title .accent {
+  background: linear-gradient(135deg, var(--ion-bright), var(--aurora));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-title .green {
+  background: linear-gradient(135deg, var(--nova), var(--aurora));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-desc {
+  font-size: 17px;
+  color: var(--text-second);
+  max-width: 520px;
+  line-height: 1.75;
+  margin-bottom: 44px;
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .3s forwards;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .4s forwards;
+}
+
+/* ═══════════════════════════════════════════
+   BUTTONS — 3D MAGNETIC
+═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: var(--r);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all .25s var(--ease-out-expo);
+  font-family: var(--font-body);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: .01em;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background .2s;
+}
+.btn:hover::after { background: rgba(255,255,255,0.06); }
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--plasma), var(--ion));
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(124,107,242,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-accent:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 32px rgba(124,107,242,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-decoration: none;
+  color: #fff;
+}
+.btn-accent:active { transform: translateY(0) scale(0.99); }
+
+.btn-outline {
+  background: var(--surface);
+  color: var(--text-prime);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+.btn-outline:hover {
+  background: var(--surface-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+  color: var(--text-prime);
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(149,120,255,0.15);
+}
+
+/* ═══════════════════════════════════════════
+   INSTALL STRIP — TERMINAL STYLE
+═══════════════════════════════════════════ */
+.install-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(3,2,10,0.8);
+  border: 1px solid rgba(149,120,255,0.25);
+  border-radius: var(--r2);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(149,120,255,0.08), 0 20px 40px rgba(0,0,0,0.4);
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .5s forwards;
+  max-width: fit-content;
+}
+.install-strip-label {
+  padding: 4px 12px;
+  background: rgba(149,120,255,0.12);
+  border-right: 1px solid rgba(149,120,255,0.15);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ion);
+  font-family: var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.install-strip-cmd {
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--nova);
+  letter-spacing: .02em;
+}
+.install-strip-cmd .prompt { color: var(--text-ghost); margin-right: 8px; }
+.install-copy-btn {
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text-ghost);
+  cursor: pointer;
+  background: rgba(255,255,255,0.04);
+  border: none;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  transition: all .2s;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.install-copy-btn:hover { color: var(--text-prime); background: rgba(255,255,255,0.08); }
+
+/* ═══════════════════════════════════════════
+   HERO STATS — 3D FLOAT CARDS
+═══════════════════════════════════════════ */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 660px;
+  margin-top: 60px;
+  opacity: 0;
+  animation: stagger-in .8s var(--ease-out-expo) .6s forwards;
+}
+.hstat {
+  padding: 22px 20px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r2);
+  backdrop-filter: blur(16px);
+  transition: all .3s var(--ease-out-expo);
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.hstat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(149,120,255,0.4), transparent);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.hstat:hover {
+  transform: translateY(-6px) rotateX(2deg);
+  border-color: rgba(149,120,255,0.3);
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(149,120,255,0.1);
+}
+.hstat:hover::before { opacity: 1; }
+.hstat-num {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ion-bright);
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+.hstat-lbl { font-size: 11px; color: var(--text-ghost); letter-spacing: .04em; }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ===== TOKENS ===== */
+    :root {
+      --bg:        #060b14;
+      --surface:   #0d1525;
+      --panel:     #111c30;
+      --border:    rgba(99,179,255,0.12);
+      --accent:    #3b8bff;
+      --accent2:   #00d4aa;
+      --text:      #d8e6ff;
+      --muted:     #6b82a8;
+      --glow:      rgba(59,139,255,0.25);
+      --r:         18px;
+    }
+
+    /* ===== BODY ===== */
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== AMBIENT BACKGROUND ===== */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 10%, rgba(59,139,255,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 80%, rgba(0,212,170,0.06) 0%, transparent 55%),
+        var(--bg);
+    }
+
+    /* ===== NOISE OVERLAY ===== */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: -1; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    /* ===== NAV ===== */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+      background: rgba(6,11,20,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 20px;
+      color: #fff; letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 6px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      padding: 7px 16px; border-radius: 99px;
+      background: transparent; border: none; cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .nav-link:hover, .nav-link.active { color: #fff; background: var(--panel); }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center; padding: 0px 20px 70px;
+      animation: fadeUp 0.7s ease both;
+    }
+    .hero-badge {
+      display: inline-block; margin-bottom: 20px;
+      padding: 5px 16px; border-radius: 99px;
+      border: 1px solid rgba(59,139,255,0.3);
+      background: rgba(59,139,255,0.07);
+      font-size: 12px; font-weight: 500; color: var(--accent);
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.4rem);
+      font-weight: 800; line-height: 1.1;
+      color: #fff; letter-spacing: -1.5px;
+      margin-bottom: 18px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      max-width: 540px; margin: 0 auto 36px;
+      font-size: 17px; color: var(--muted); line-height: 1.65;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 13px 28px; border-radius: 99px;
+      background: linear-gradient(135deg, var(--accent), #5aa3ff);
+      color: #fff; font-size: 14px; font-weight: 600;
+      border: none; cursor: pointer;
+      box-shadow: 0 0 30px var(--glow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--glow); }
+    .btn-outline {
+      padding: 13px 28px; border-radius: 99px;
+      background: transparent;
+      color: var(--text); font-size: 14px; font-weight: 500;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-outline:hover { background: var(--panel); border-color: rgba(99,179,255,0.25); }
+
+    /* ===== FEATURE PILLS ===== */
+    .features-row {
+      display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;
+      padding: 0 20px 60px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .feature-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 99px;
+      background: var(--panel); border: 1px solid var(--border);
+      font-size: 13px; color: var(--text);
+    }
+    .feature-pill .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent2); flex-shrink: 0;
+      box-shadow: 0 0 8px var(--accent2);
+    }
+
+    /* ===== PAGE SECTIONS ===== */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeUp 0.4s ease both; }
+
+    /* ===== APP SECTION ===== */
+    .app-wrap {
+      max-width: 780px; margin: 0 auto; padding: 0 20px 80px;
+    }
+
+    /* ===== MODE SWITCHER ===== */
+    .mode-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px;
+      background: var(--surface); border-radius: 99px;
+      padding: 5px; border: 1px solid var(--border);
+    }
+    .mode-tab {
+      flex: 1; padding: 10px 16px; border-radius: 99px;
+      border: none; background: transparent;
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .mode-tab.active { background: var(--accent); color: #fff; }
+
+    /* ===== PANEL CARD ===== */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 700; color: #fff;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .panel-title .icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(59,139,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ===== CHAT BOX ===== */
+    .chat-box {
+      height: 380px; overflow-y: auto;
+      padding: 16px; border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      scroll-behavior: smooth;
+    }
+    .chat-box::-webkit-scrollbar { width: 4px; }
+    .chat-box::-webkit-scrollbar-track { background: transparent; }
+    .chat-box::-webkit-scrollbar-thumb { background: var(--panel); border-radius: 99px; }
+    .msg { margin-bottom: 18px; }
+    .msg-role {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin-bottom: 5px;
+    }
+    .msg-role.you { color: var(--accent); }
+    .msg-role.ai  { color: var(--accent2); }
+    .msg-body {
+      font-size: 14px; line-height: 1.65; color: var(--text);
+      background: var(--panel); border-radius: 12px; padding: 12px 16px;
+      border: 1px solid var(--border);
+    }
+    .msg-body p { margin: 0 0 8px; }
+    .msg-body p:last-child { margin: 0; }
+    .msg-body code {
+      background: rgba(255,255,255,0.06); padding: 2px 6px;
+      border-radius: 5px; font-size: 13px;
+    }
+    .msg-body pre {
+      background: rgba(255,255,255,0.04); border-radius: 8px;
+      padding: 12px; overflow-x: auto; margin: 8px 0;
+      font-size: 13px;
+    }
+
+    /* ===== FORM GRID ===== */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%; padding: 12px 16px;
+      border-radius: 10px; border: 1px solid var(--border);
+      background: var(--panel); color: var(--text);
+      font-size: 14px; font-family: 'DM Sans', sans-serif;
+      outline: none; transition: border-color 0.2s, background 0.2s;
+      appearance: none;
+    }
+    .form-group input::placeholder { color: var(--muted); }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      background: rgba(59,139,255,0.05);
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ===== FILE INPUT ===== */
+    .file-upload {
+      padding: 12px 16px;
+      border-radius: 10px; border: 1px dashed var(--border);
+      background: rgba(255,255,255,0.02); cursor: pointer;
+      font-size: 13px; color: var(--muted); transition: border-color 0.2s;
+    }
+    .file-upload:hover { border-color: var(--accent); }
+
+    /* ===== SEND BUTTON ===== */
+    .send-btn {
+      width: 100%; padding: 14px;
+      border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), #5aa3ff);
+      color: #fff; font-size: 15px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      box-shadow: 0 0 30px var(--glow);
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .send-btn:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--glow); }
+    .send-btn:active { transform: scale(0.99); }
+    .send-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* ===== DIVIDER ===== */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ===== HIDDEN ===== */
+    .hidden { display: none !important; }
+
+    /* ===== DOCS SECTION ===== */
+    .docs-wrap {
+      max-width: 860px; margin: 0 auto; padding: 0 20px 100px;
+    }
+    .docs-header {
+      text-align: center; margin-bottom: 56px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .docs-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800;
+      color: #fff; letter-spacing: -1px; margin-bottom: 10px;
+    }
+    .docs-header p { font-size: 16px; color: var(--muted); }
+
+    .docs-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px; margin-bottom: 48px;
+    }
+    .doc-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px;
+      transition: border-color 0.25s, transform 0.25s;
+      cursor: default;
+    }
+    .doc-card:hover { border-color: rgba(59,139,255,0.3); transform: translateY(-3px); }
+    .doc-card-icon {
+      font-size: 28px; margin-bottom: 14px;
+    }
+    .doc-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700; color: #fff;
+      margin-bottom: 8px;
+    }
+    .doc-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    .docs-section { margin-bottom: 40px; }
+    .docs-section h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 700; color: #fff;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .docs-section h3 span {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 7px;
+      background: rgba(59,139,255,0.15);
+      font-size: 13px;
+    }
+    .step-list { display: flex; flex-direction: column; gap: 12px; }
+    .step {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+    }
+    .step-num {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border-radius: 8px; background: rgba(59,139,255,0.12);
+      color: var(--accent); font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-body h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .step-body p  { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+    .code-block {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px;
+      font-family: 'Courier New', monospace; font-size: 13px; color: #a8d4ff;
+      overflow-x: auto; margin-top: 10px;
+      line-height: 1.6;
+    }
+    .code-block .key { color: #ffd580; }
+    .code-block .val { color: #a8ff80; }
+    .code-block .cm  { color: #5a7a9a; }
+
+/* ═══════════════════════════════════════════
+   FOUNDER PAGE — TIMELINE
+═══════════════════════════════════════════ */
+.founder-page { padding: 72px; max-width: 900px; }
+.founder-hero {
+  display: flex;
+  gap: 44px;
+  align-items: flex-start;
+  margin-bottom: 56px;
+  flex-wrap: wrap;
+}
+.founder-avatar {
+  width: 130px; height: 130px;
+  border-radius: 24px;
+  border: 2px solid rgba(149,120,255,0.4);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(149,120,255,0.08), 0 0 40px rgba(149,120,255,0.15);
+  transition: all .3s var(--ease-out-expo);
+}
+.founder-avatar:hover {
+  box-shadow: 0 0 0 4px rgba(149,120,255,0.15), 0 0 60px rgba(149,120,255,0.25);
+  transform: scale(1.03);
+}
+.founder-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.founder-info h1 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-prime);
+  letter-spacing: -0.04em;
+  margin-bottom: 6px;
+}
+.founder-tagline { font-size: 14px; color: var(--text-second); line-height: 1.7; margin-bottom: 18px; }
+.founder-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.founder-badge {
+  font-size: 11px;
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-second);
+  background: rgba(255,255,255,0.04);
+  letter-spacing: .03em;
+  transition: all .2s;
+}
+.founder-badge:hover {
+  border-color: rgba(149,120,255,0.3);
+  color: var(--ion-bright);
+  background: rgba(149,120,255,0.07);
+}
+.founder-links { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 36px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 8px; bottom: 8px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--ion), var(--aurora), var(--nova));
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(149,120,255,0.3);
+}
+.tl-item { position: relative; margin-bottom: 40px; }
+.tl-dot {
+  position: absolute;
+  left: -30px; top: 4px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--ion);
+  border: 3px solid var(--void);
+  box-shadow: 0 0 0 2px var(--ion), 0 0 12px rgba(149,120,255,0.5);
+  transition: all .3s var(--ease-spring);
+}
+.tl-item:hover .tl-dot { transform: scale(1.3); }
+.tl-age {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ion-bright);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-family: var(--font-mono);
+}
+.tl-title { font-size: 16px; font-weight: 600; color: var(--text-prime); margin-bottom: 8px; letter-spacing: -0.01em; }
+.tl-desc { font-size: 13px; color: var(--text-second); line-height: 1.75; }
+.tl-offers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tl-offer {
+  font-size: 11px;
+  padding: 5px 11px;
+  background: rgba(61,214,140,0.07);
+  border: 1px solid rgba(61,214,140,0.18);
+  border-radius: 7px;
+  color: var(--nova);
+  transition: all .2s;
+}
+.tl-offer:hover {
+  background: rgba(61,214,140,0.12);
+  transform: translateY(-1px);
+}
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center; padding: 32px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--muted);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SPINNER ===== */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 700px) {
+      nav { padding: 0 16px; }
+      .nav-links { gap: 2px; }
+      .nav-link { padding: 7px 10px; font-size: 12px; }
+      .two-col { grid-template-columns: 1fr; }
+      .founder-card { grid-template-columns: 1fr; }
+      .founder-left { border-right: none; border-bottom: 1px solid var(--border); }
+      .founder-right { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-logo">NPM-<span>Rag<span>-AI</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')">Home</button>
+    <button class="nav-link" onclick="showPage('app')">App</button>
+    <button class="nav-link" onclick="showPage('docs')">Docs</button>
+    <button class="nav-link" onclick="showPage('founder')">About</button>
+  </div>
+</nav>
+
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="hero-badge">Powered by NPMAI Ecosystem</div>
+    <h1>Build &amp; Deploy<br/><em>RAG Intelligence</em><br/>in Minutes</h1>
+    <p>Upload documents, connect YouTube links, and chat with your private knowledge base — all without writing a single line of code.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showPage('app')">Open the App</button>
+      <button class="btn-outline" onclick="showPage('docs')">Read the Docs</button>
+    </div>
+  </section>
+  <div class="features-row">
+    <div class="feature-pill"><span class="dot"></span> PDF &amp; Image Upload</div>
+    <div class="feature-pill"><span class="dot"></span> YouTube Ingestion</div>
+    <div class="feature-pill"><span class="dot"></span> Private &amp; Public RAG</div>
+    <div class="feature-pill"><span class="dot"></span> Persistent Memory</div>
+    <div class="feature-pill"><span class="dot"></span> Llama 3.2 Powered</div>
+  </div>
+</div>
+
+<!-- ===== APP PAGE ===== -->
+<div id="page-app" class="page">
+  <div class="app-wrap">
+
+    <!-- MODE SWITCHER -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="product('Chat', this)">💬 Chat</button>
+      <button class="mode-tab" onclick="product('use', this)">🔍 Use RAG</button>
+      <button class="mode-tab" onclick="product('develop', this)">🛠 Build RAG</button>
+    </div>
+
+    <!-- CHAT WINDOW -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">💬</span> Conversation</div>
+      <div class="chat-box" id="chat-box"></div>
+    </div>
+
+    <!-- VISIBILITY PANEL (for Use RAG + Build RAG) -->
+    <div class="panel hidden" id="card2">
+      <div class="panel-title"><span class="icon">🔐</span> <span id="mode-title">Configuration</span></div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Visibility</label>
+          <select id="tools" onchange="tab(this.value)">
+            <option value="publi">Public</option>
+            <option value="privat">Private</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="rag_dev_pv">
+          <label>Secret Username</label>
+          <input type="text" id="secret_user" placeholder="Enter secret username" />
+        </div>
       </div>
+    </div>
 
-      <div class="card" id="card2" style="margin-bottom: 20px; display: none">
-        <div id="card8" style="display: none"><h2>Develop RAG Chat</h2></div>
-        <div id="card3" style="display: none"><h2>Use NPMAI Rag chat</h2></div>
+    <!-- INPUTS PANEL -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">📎</span> Inputs &amp; Files</div>
 
-        <label><h4>Public or Private Visibility</h4></label>
-        <select id="tools" onchange="tab(this.value)">
-          <option value="publi">Public</option>
-          <option value="privat">Private</option></select
-        ><br /><br />
-
-        <section id="rag_dev_pv" style="display: none">
-          <label><h3>Secret User_name</h3></label>
-          <input
-            type="text"
-            id="secret_user"
-            placeholder="Enter a Secret User_name"
-          />
-        </section>
-      </div>
-
-      <div id="card1">
-        <div
-          id="chat-box"
-          style="
-            height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            white-space: pre-wrap;
-          "
-        ></div>
-      </div>
-
-      <div class="card">
-        <section id="sectioninput">
-          <label>Upload PDF(s)</label>
-          <input type="file" id="pdf_file" accept=".pdf" multiple /><br /><br />
-
-          <label>Upload Image(s)</label>
-          <input
-            type="file"
-            id="image_file"
-            accept=".png,.jpg,.jpeg"
-            multiple
-          /><br /><br />
-
+      <div id="sectioninput">
+        <div class="two-col">
+          <div class="form-group">
+            <label>Upload PDF(s)</label>
+            <input type="file" id="pdf_file" accept=".pdf" multiple class="file-upload" />
+          </div>
+          <div class="form-group">
+            <label>Upload Image(s)</label>
+            <input type="file" id="image_file" accept=".png,.jpg,.jpeg" multiple class="file-upload" />
+          </div>
+        </div>
+        <div class="form-group">
           <label>YouTube Link</label>
-          <input id="link" placeholder="Enter YouTube video link" /><br /><br />
-
+          <input id="link" placeholder="https://youtube.com/watch?v=..." />
+        </div>
+        <div class="form-group">
           <label>Upload Video(s)</label>
-          <input type="file" id="video_file" accept=".mp4" multiple />
-        </section>
-
-        <section id="section_input_db">
-          <label>Knowledge Base Name</label>
-          <input id="db" placeholder="Knowledge Base Name" /><br />
-
-          <section id="section_input_quest">
-            <label>Your Question</label>
-            <input id="question" placeholder="Your question" />
-          </section>
-        </section>
-        <button onclick="ask()">Send</button>
+          <input type="file" id="video_file" accept=".mp4" multiple class="file-upload" />
+        </div>
+        <div class="divider"></div>
       </div>
-    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-      let currentMode = "Chat";
+      <div class="two-col">
+        <div class="form-group">
+          <label>Knowledge Base Name</label>
+          <input id="db" placeholder="my-knowledge-base" />
+        </div>
+        <div class="form-group" id="section_input_quest">
+          <label>Your Question</label>
+          <input id="question" placeholder="Ask anything..." />
+        </div>
+      </div>
 
-      function tab(val) {
-        document.getElementById("rag_dev_pv").style.display =
-          val === "privat" ? "block" : "none";
-      }
+      <button class="send-btn" id="send-btn" onclick="ask()">Send</button>
+    </div>
 
-      function product(product_name) {
-        currentMode = product_name;
-        const chat_c = document.getElementById("card1");
-        const develop_c = document.getElementById("card2");
-        const use_t = document.getElementById("card3");
-        const dev_t = document.getElementById("card8");
-        const inputs = document.getElementById("sectioninput");
-        const q_box = document.getElementById("section_input_quest");
+  </div>
+</div>
 
-        develop_c.style.display = product_name === "Chat" ? "none" : "block";
+<!-- ===== DOCS PAGE ===== -->
+<div id="page-docs" class="page">
+  <div class="docs-wrap">
+    <div class="docs-header">
+      <h2>Documentation</h2>
+      <p>Everything you need to know to build with NPMAI in minutes.</p>
+    </div>
 
-        if (product_name === "Chat") {
-          inputs.style.display = "block";
-          q_box.style.display = "block";
-          use_t.style.display = "none";
-          dev_t.style.display = "none";
-        } else if (product_name === "use") {
-          use_t.style.display = "block";
-          dev_t.style.display = "none";
-          inputs.style.display = "none";
-          q_box.style.display = "block";
-        } else if (product_name === "develop") {
-          use_t.style.display = "none";
-          dev_t.style.display = "block";
-          inputs.style.display = "block";
-          q_box.style.display = "none";
-        }
-      }
+    <!-- OVERVIEW CARDS -->
+    <div class="docs-grid">
+      <div class="doc-card">
+        <div class="doc-card-icon">💬</div>
+        <h3>Chat Mode</h3>
+        <p>Talk to the AI with file and YouTube context. Upload PDFs, images, or videos and ask questions naturally.</p>
+      </div>
+      <div class="doc-card">
+        <div class="doc-card-icon">🔍</div>
+        <h3>Use RAG</h3>
+        <p>Query an existing knowledge base. Connect to any public or private vector store and get precise answers.</p>
+      </div>
+      <div class="doc-card">
+        <div class="doc-card-icon">🛠</div>
+        <h3>Build RAG</h3>
+        <p>Ingest documents into a named knowledge base. Build your organisation's private AI in minutes.</p>
+      </div>
+      <div class="doc-card">
+        <div class="doc-card-icon">🔐</div>
+        <h3>Privacy Controls</h3>
+        <p>Public bases are visible to all. Private bases are locked with a secret username — only you can access them.</p>
+      </div>
+    </div>
 
-      function appendMessage(role, text) {
-        const chatBox = document.getElementById("chat-box");
-        const msgDiv = document.createElement("div");
-        const aires = text;
-        const mdres = marked.parse(text);
-        msgDiv.style.marginBottom = "15px";
-        msgDiv.innerHTML = `<strong>${role}:</strong> ${mdres}`;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
+    <!-- HOW TO USE CHAT -->
+    <div class="docs-section">
+      <h3><span>💬</span> Using Chat Mode</h3>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Open the App &amp; select "Chat"</h4>
+            <p>Click the App page from the navigation and make sure the "Chat" tab is active.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Upload files (optional)</h4>
+            <p>Attach PDFs, images, or MP4 videos. You can also paste a YouTube URL for automatic transcription.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Give your Knowledge Base a name</h4>
+            <p>Type a short name like <code>my-docs</code>. This namespaces your uploads.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Type your question and hit Send</h4>
+            <p>The AI will answer using both your uploaded context and its general knowledge, with session memory.</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      async function ask() {
-        const fd = new FormData();
+    <!-- HOW TO BUILD RAG -->
+    <div class="docs-section">
+      <h3><span>🛠</span> Building a RAG Knowledge Base</h3>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Switch to "Build RAG" tab</h4>
+            <p>This mode ingests your documents into a persistent vector database — not just a chat session.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Choose Public or Private</h4>
+            <p>Public bases can be queried by anyone who knows the DB name. Private bases require your secret username.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Upload your documents</h4>
+            <p>Supports PDF, PNG/JPG, MP4 video, and YouTube links. Multiple files are accepted at once.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Name your Knowledge Base and send</h4>
+            <p>The question field is hidden in Build mode. Just name your DB and hit Send to start ingestion.</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        fd.append("DB_PATH", document.getElementById("db").value);
-        fd.append("query", document.getElementById("question").value);
-        fd.append("DB_Privacy", document.getElementById("tools").value);
-        fd.append("secret_key", document.getElementById("secret_user").value);
+    <!-- API REFERENCE -->
+    <div class="docs-section">
+      <h3><span>⚡</span> API Quick Reference</h3>
+      <p style="font-size:13px; color: var(--muted); margin-bottom: 12px;">The backend exposes three endpoints:</p>
+      <div class="code-block">
+<span class="cm"># 1 — Multimodal Chat</span>
+<span class="key">POST</span> /ask
+  <span class="key">query</span>       <span class="val">string</span>   — user question
+  <span class="key">DB_PATH</span>     <span class="val">string</span>   — knowledge base name
+  <span class="key">file</span>        <span class="val">file[]</span>   — PDFs, images, videos (optional)
+  <span class="key">link</span>        <span class="val">string</span>   — YouTube URL (optional)
 
-        const fileInputs = ["pdf_file", "image_file", "video_file"];
-        fileInputs.forEach((id) => {
-          const files = document.getElementById(id).files;
-          for (let i = 0; i < files.length; i++) {
-            fd.append("file", files[i]);
-          }
-        });
+<span class="cm"># 2 — Query Existing RAG</span>
+<span class="key">POST</span> /use
+  <span class="key">DB_PATH</span>     <span class="val">string</span>
+  <span class="key">query</span>       <span class="val">string</span>
+  <span class="key">DB_Privacy</span>  <span class="val">"publi"|"privat"</span>
+  <span class="key">secret_key</span>  <span class="val">string</span>   — required if private
 
-        const yt = document.getElementById("link").value.trim();
-        if (yt) {
-          fd.append("link", yt);
-          fd.append("output_path", "yt_video.mp4");
-        }
+<span class="cm"># 3 — Ingest / Build RAG</span>
+<span class="key">POST</span> /develop
+  <span class="key">DB_PATH</span>     <span class="val">string</span>
+  <span class="key">DB_Privacy</span>  <span class="val">"publi"|"privat"</span>
+  <span class="key">file</span>        <span class="val">file[]</span>
+  <span class="key">link</span>        <span class="val">string</span>   — YouTube URL (optional)
+      </div>
+    </div>
 
-        let targetUrl = "/ask";
-        if (currentMode === "use") targetUrl = "/use";
-        if (currentMode === "develop") targetUrl = "/develop";
+  </div>
+</div>
 
-        appendMessage(
-          "You",
-          document.getElementById("question").value || "Uploading files..."
-        );
+<!-- ══════════════════════════════
+     FOUNDER PAGE
+══════════════════════════════ -->
+<div id="page-founder" class="page">
+  <div class="founder-page">
+    <h1 class="page-title" style="margin-bottom:40px;">The <span class="page-title-accent">Founder</span></h1>
 
-        try {
-          const res = await fetch(targetUrl, { method: "POST", body: fd });
-          const j = await res.json();
-          appendMessage("AI", j.response);
-        } catch (err) {
-          appendMessage("Error", "Could not connect to server.");
-        }
-      }
-    </script>
-  </body>
+    <div class="founder-hero">
+      <div class="founder-avatar">
+        <img src="https://i.ibb.co/rGJ6bGHc/Sonu2.jpg" alt="Sonu Kumar — Founder NPMAI ECOSYSTEM, Bihar Viral Boy" loading="lazy">
+      </div>
+      <div class="founder-info">
+        <h1>Sonu Kumar</h1>
+        <p style="font-size:13px;color:var(--ion-bright);font-weight:600;margin-bottom:10px;letter-spacing:.01em;">Founder of NPMAI ECOSYSTEM · Bihar Viral Boy</p>
+        <p class="founder-tagline">Software Developer · AI Developer · Web Developer · Cloud Developer · DevOps · TEDx Speaker · Social Thinker · Researcher<br>Student at Allen Career Institute &amp; Disha Delphi Public School, Kota (100% Scholarship, since 2022)</p>
+        <div class="founder-badges">
+          <span class="founder-badge">👤 Age 15</span>
+          <span class="founder-badge">🇮🇳 Bihar, India</span>
+          <span class="founder-badge">🏫 Kota, Rajasthan</span>
+          <span class="founder-badge">434K+ followers</span>
+          <span class="founder-badge">TEDx Speaker</span>
+        </div>
+        <div class="founder-links">
+          <a href="https://github.com/sonuramashishnpm" target="_blank" rel="noopener" class="btn btn-outline" style="padding:8px 16px;font-size:12px;">GitHub ↗</a>
+          <a href="https://pypi.org/project/npmai" target="_blank" rel="noopener" class="btn btn-outline" style="padding:8px 16px;font-size:12px;">PyPI ↗</a>
+          <a href="mailto:sonuramashishnpm@gmail.com" class="btn btn-outline" style="padding:8px 16px;font-size:12px;">Email ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:56px;">
+      <div class="hstat"><div class="hstat-num">1.5M+</div><div class="hstat-lbl">PyPI downloads</div></div>
+      <div class="hstat"><div class="hstat-num">433K+</div><div class="hstat-lbl">Social followers</div></div>
+      <div class="hstat"><div class="hstat-num">TEDx</div><div class="hstat-lbl">Speaker at 13</div></div>
+      <div class="hstat"><div class="hstat-num">100%</div><div class="hstat-lbl">Allen scholarship</div></div>
+      <div class="hstat"><div class="hstat-num">45+</div><div class="hstat-lbl">LLMs in ecosystem</div></div>
+      <div class="hstat"><div class="hstat-num">3</div><div class="hstat-lbl">Research papers 2026</div></div>
+    </div>
+
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-prime);margin-bottom:36px;letter-spacing:-0.02em;">The Journey — How Sonu Kumar <span style="background:linear-gradient(135deg,var(--ion-bright),var(--aurora));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Went Viral</span></h2>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-age">Age 9 — The Teacher</div>
+        <div class="tl-title">Started Teaching Nursery Kids in Class 4th</div>
+        <div class="tl-desc">While still in 4th grade himself, Sonu began teaching nursery-level children in his village. This early experience with education inequality planted the seed for his lifelong mission to improve learning access for underserved communities in India.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--aurora);box-shadow:0 0 0 2px var(--aurora),0 0 12px rgba(56,217,217,0.5);"></div>
+        <div class="tl-age">Age 11 — The Moment That Changed Everything</div>
+        <div class="tl-title">Met the Chief Minister — Raised Education &amp; Liquor Ban Issues</div>
+        <div class="tl-desc">At age 11, Sonu met the Chief Minister of Bihar and directly raised two critical issues: the poor quality of education in government schools, and the weak implementation of the liquor ban in Bihar. This act of civic courage by an 11-year-old went viral across India, earning him the name <strong style="color:var(--ion-bright)">Bihar Viral Boy</strong>.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--nova);box-shadow:0 0 0 2px var(--nova),0 0 12px rgba(61,214,140,0.5);"></div>
+        <div class="tl-age">Age 11-12 — National Recognition</div>
+        <div class="tl-title">Offers from Across India — Politicians, Educators, and Actors</div>
+        <div class="tl-desc">After going viral, Sonu received support and recognition from prominent figures across India:</div>
+        <div class="tl-offers">
+          <span class="tl-offer">Chirag Paswan — Minister of Food Processing (Cabinet, BJP)</span>
+          <span class="tl-offer">R.K. Sinha — Chairman SIS Group, Former Rajya Sabha MP (BJP)</span>
+          <span class="tl-offer">Late Sushil Kumar Modi — Former Deputy CM, Bihar (BJP)</span>
+          <span class="tl-offer">Pappu Yadav — MP Purnia, Bihar (Congress)</span>
+          <span class="tl-offer">Sonu Sood — Bollywood Actor &amp; Philanthropist</span>
+          <span class="tl-offer">Yaduvanshi Siksha Niketan, Haryana — Former Haryana Congress MLA</span>
+          <span class="tl-offer">Brajesh Maheshwari — Founder &amp; Former CEO ALLEN Career Institute</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--flare);box-shadow:0 0 0 2px var(--flare),0 0 12px rgba(245,166,35,0.5);"></div>
+        <div class="tl-age">Age 13 — TEDx Speaker</div>
+        <div class="tl-title">Delivered a TEDx Talk on Education &amp; Social Change</div>
+        <div class="tl-desc">Sonu delivered a TEDx Talk, becoming one of India's youngest TEDx speakers. His talk addressed the systemic failures in rural education and his vision for using technology to bridge India's urban-rural learning divide.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--ion-bright);box-shadow:0 0 0 2px var(--ion-bright),0 0 12px rgba(181,160,255,0.5);"></div>
+        <div class="tl-age">Age 13-14 — The Builder</div>
+        <div class="tl-title">Founded NPMAI ECOSYSTEM — 1.5 Million+ Downloads</div>
+        <div class="tl-desc">Self-taught without any CS background in the family, Sonu built the entire NPMAI ECOSYSTEM on free cloud infrastructure — Render, HuggingFace Spaces, Supabase, Netlify. The ecosystem now serves hundreds of thousands of developers worldwide. Supported by Lokesh Chaudhary (CS &amp; Robotics Teacher, DDPS Kota).</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--ion);box-shadow:0 0 0 2px var(--ion),0 0 12px rgba(124,107,242,0.5);"></div>
+        <div class="tl-age">2026 — Researcher</div>
+        <div class="tl-title">Published Three Research Papers — LARA, RID, IAST</div>
+        <div class="tl-desc">Published three original research papers in 2026: LARA (novel RAG architecture), Representative Ideal Democracy (political science framework), and Ideal Administrative System Theory (comparative governance). All freely available under the NPMAI ECOSYSTEM research programme.</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(149,120,255,0.06);border:1px solid rgba(149,120,255,0.18);border-radius:var(--r2);padding:32px;margin-top:56px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ion),transparent);"></div>
+      <h3 style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--ion-bright);margin-bottom:12px;">Mission</h3>
+      <p style="font-size:15px;color:var(--text-second);line-height:1.8;font-style:italic;">"Promoting Individual Journalism to every nation's village so that the democratic values of a nation can be strengthened and we can achieve Representative Ideal Democracy."</p>
+      <p style="font-size:12px;color:var(--text-ghost);margin-top:10px;letter-spacing:.04em;">— Sonu Kumar, Founder, NPMAI ECOSYSTEM</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  Built with ❤️ by the NPMAI Ecosystem · &copy; 2025 NPMAI
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  let currentMode = 'Chat';
+
+  /* ---- NAV ---- */
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    const map = { home: 0, app: 1, docs: 2, founder: 3 };
+    document.querySelectorAll('.nav-link')[map[id]].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---- VISIBILITY TOGGLE ---- */
+  function tab(val) {
+    const pv = document.getElementById('rag_dev_pv');
+    if (val === 'privat') pv.classList.remove('hidden');
+    else pv.classList.add('hidden');
+  }
+
+  /* ---- MODE SWITCH ---- */
+  function product(product_name, btn) {
+    currentMode = product_name;
+    document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const card2   = document.getElementById('card2');
+    const inputs  = document.getElementById('sectioninput');
+    const q_box   = document.getElementById('section_input_quest');
+    const mTitle  = document.getElementById('mode-title');
+
+    if (product_name === 'Chat') {
+      card2.classList.add('hidden');
+      inputs.classList.remove('hidden');
+      q_box.classList.remove('hidden');
+    } else if (product_name === 'use') {
+      card2.classList.remove('hidden');
+      mTitle.textContent = 'Use Your ORG RAG — Configuration';
+      inputs.classList.add('hidden');
+      q_box.classList.remove('hidden');
+    } else if (product_name === 'develop') {
+      card2.classList.remove('hidden');
+      mTitle.textContent = 'Build RAG — Configuration';
+      inputs.classList.remove('hidden');
+      q_box.classList.add('hidden');
+    }
+  }
+
+  /* ---- CHAT RENDER ---- */
+  function appendMessage(role, text) {
+    const chatBox = document.getElementById('chat-box');
+    const msgDiv  = document.createElement('div');
+    msgDiv.className = 'msg';
+    msgDiv.innerHTML = `
+      <div class="msg-role ${role === 'You' ? 'you' : 'ai'}">${role}</div>
+      <div class="msg-body">${marked.parse(text)}</div>`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  /* ---- SEND ---- */
+  async function ask() {
+    const btn = document.getElementById('send-btn');
+    const fd  = new FormData();
+
+    fd.append('DB_PATH',    document.getElementById('db').value);
+    fd.append('query',      document.getElementById('question').value);
+    fd.append('DB_Privacy', document.getElementById('tools').value);
+    fd.append('secret_key', document.getElementById('secret_user').value);
+
+    ['pdf_file', 'image_file', 'video_file'].forEach(id => {
+      const files = document.getElementById(id).files;
+      for (let i = 0; i < files.length; i++) fd.append('file', files[i]);
+    });
+
+    const yt = document.getElementById('link').value.trim();
+    if (yt) { fd.append('link', yt); fd.append('output_path', 'yt_video.mp4'); }
+
+    let targetUrl = '/ask';
+    if (currentMode === 'use')     targetUrl = '/use';
+    if (currentMode === 'develop') targetUrl = '/develop';
+
+    appendMessage('You', document.getElementById('question').value || 'Uploading files…');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Thinking…';
+
+    try {
+      const res = await fetch(targetUrl, { method: 'POST', body: fd });
+      const j   = await res.json();
+      appendMessage('AI', j.response || 'Done.');
+    } catch (err) {
+      appendMessage('Error', 'Could not connect to server.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Send';
+    }
+  }
+</script>
+</body>
 </html>
-
-
-
-
