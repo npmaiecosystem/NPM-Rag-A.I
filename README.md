@@ -147,10 +147,3 @@ License: MIT
 
 If this project helps you — give it a ⭐ bro 🔥
 ```
-
-Bro — this is **everything in one single markdown block**.  
-Just copy from the very first line `# NPM Rag A.I` all the way to the last line and paste it into your README.md file.  
-
-No new boxes, no separate sections outside — done.  
-Good to go now? 😤
-```
